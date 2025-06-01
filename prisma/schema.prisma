@@ -7,3 +7,115 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User{
+  id           String   @id @default(uuid())
+  name         String 
+  email        String @unique
+  password     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  addresses    Address[] @relation(onDelete: Cascade)
+  wishlist     Product[] @relation("Wishlist")
+  cart         Product[] @relation("Cart")
+  orderHistory Order[] @relation("OrderHistory")
+}
+
+enum AddressType {
+  HOME
+  WORK
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Address {
+  id       String     @id @default(uuid()) 
+  type      AddressType
+  street    String
+  city      String
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+}
+
+model Seller {
+  id       String    @id @default(uuid())
+  name     String
+  email    String 
+  password  String
+  products Product[]
+  orders   Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Admin {
+  id    String @id @default(uuid())
+  name  String
+  email String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  stock     Int
+  sellerId  String
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+  wishlistedBy User[] @relation("Wishlist")
+  inCarts    User[]   @relation("Cart")
+  orders     Order[]  @relation("ProductOrders")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  UPI
+  BANK_TRANSFER
+  COD
+}
+
+model Order {
+  id        String        @id @default(uuid())
+  userId    String
+  productId String
+  sellerId  String
+  quantity  Int
+  status    OrderStatus
+  amount    Float
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+  orderItems     OrderItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus
+  transactionId String?     
+}
+
+model OrderItem {  //can have multiple items per order
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float 
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
