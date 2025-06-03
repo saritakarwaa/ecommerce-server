@@ -7,17 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id           String   @id @default(uuid())
-  name         String 
-  email        String @unique
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
   password     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  addresses    Address[] @relation(onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  addresses    Address[]
   wishlist     Product[] @relation("Wishlist")
   cart         Product[] @relation("Cart")
-  orderHistory Order[] @relation("OrderHistory")
+  orderHistory Order[]   @relation("OrderHistory")
 }
 
 enum AddressType {
@@ -34,45 +34,46 @@ enum OrderStatus {
 }
 
 model Address {
-  id       String     @id @default(uuid()) 
-  type      AddressType
-  street    String
-  city      String
-  userId    String
-  user      User   @relation(fields: [userId], references: [id])
+  id     String      @id @default(uuid())
+  type   AddressType
+  street String
+  city   String
+  userId String
+  user   User        @relation(fields: [userId], references: [id])
 }
 
 model Seller {
-  id       String    @id @default(uuid())
-  name     String
-  email    String 
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
   password  String
-  products Product[]
-  orders   Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  products  Product[]
+  orders    Order[]   @relation("SellerOrders")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Admin {
-  id    String @id @default(uuid())
-  name  String
-  email String
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id        String   @id @default(uuid())
-  name      String
-  price     Float
-  stock     Int
-  sellerId  String
-  seller    Seller   @relation(fields: [sellerId], references: [id])
-  wishlistedBy User[] @relation("Wishlist")
-  inCarts    User[]   @relation("Cart")
-  orders     Order[]  @relation("ProductOrders")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String      @id @default(uuid())
+  name         String
+  price        Float
+  stock        Int
+  sellerId     String
+  seller       Seller      @relation(fields: [sellerId], references: [id])
+  wishlistedBy User[]      @relation("Wishlist")
+  inCarts      User[]      @relation("Cart")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  orderItems   OrderItem[]
 }
 
 enum PaymentStatus {
@@ -92,30 +93,27 @@ enum PaymentMethod {
 }
 
 model Order {
-  id        String        @id @default(uuid())
-  userId    String
-  productId String
-  sellerId  String
-  quantity  Int
-  status    OrderStatus
-  amount    Float
-  user      User     @relation(fields: [userId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
-  seller    Seller   @relation(fields: [sellerId], references: [id])
-  orderItems     OrderItem[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String        @id @default(uuid())
+  userId        String
+  sellerId      String
+  status        OrderStatus
+  amount        Float
+  user          User          @relation(fields: [userId], references: [id], name: "OrderHistory")
+  seller        Seller        @relation(fields: [sellerId], references: [id], name: "SellerOrders")
+  orderItems    OrderItem[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   paymentMethod PaymentMethod
   paymentStatus PaymentStatus
-  transactionId String?     
+  transactionId String?
 }
 
-model OrderItem {  //can have multiple items per order
-  id        String   @id @default(uuid())
+model OrderItem {
+  id        String  @id @default(uuid())
   orderId   String
   productId String
   quantity  Int
-  price     Float 
+  price     Float
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
 }
