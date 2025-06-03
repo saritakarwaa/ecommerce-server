@@ -55,3 +55,47 @@ export const updateAdmin=async(req:Request,res:Response)=>{
 //   const token = generateToken(admin.id, 'superadmin');
 //   res.status(201).json({ admin, token });
 // }
+
+
+
+
+
+export const getAllAdmins = async (_req: Request, res: Response) => {
+  try {
+    const admins = await prisma.admin.findMany();
+    res.json(admins);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getAdminById = async (req: Request, res: Response) => {
+  const adminId = req.params.id;
+
+  if (req.user?.id !== adminId && req.user?.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) return res.status(404).json({ message: 'Admin not found' });
+    res.json(admin);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteAdmin = async (req: Request, res: Response) => {
+  const adminId = req.params.id;
+
+  if (req.user?.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Only superadmin can delete admins' });
+  }
+
+  try {
+    await prisma.admin.delete({ where: { id: adminId } });
+    res.json({ message: 'Admin deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

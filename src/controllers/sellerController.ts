@@ -42,3 +42,48 @@ export const updateSeller = async (req:Request, res:Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getSellerById = async (req: Request, res: Response) => {
+  const sellerId = req.params.id;
+
+  if (req.user?.id !== sellerId && req.user?.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
+    if (!seller) return res.status(404).json({ message: 'Seller not found' });
+    res.json(seller);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteSeller = async (req: Request, res: Response) => {
+  const sellerId = req.params.id;
+
+  if (req.user?.id !== sellerId && req.user?.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+  const products = await prisma.product.count({
+      where: { sellerId }
+  });
+  if (products > 0) {
+    return res.status(400).json({ message: 'Cannot delete seller with active products' });
+  }
+  try {
+    await prisma.seller.delete({ where: { id: sellerId } });
+    res.json({ message: 'Seller deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getAllSellers = async (_req: Request, res: Response) => {
+  try {
+    const sellers = await prisma.seller.findMany();
+    res.json(sellers);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

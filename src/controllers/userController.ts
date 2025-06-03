@@ -43,3 +43,43 @@ export const updateUser=async(req:Request,res:Response)=>{
         res.status(500).json({error:err.message})
     }
 }
+
+export const getUserById = async (req: Request, res: Response) => {
+  const userId = req.params.id;
+
+  if (req.user?.id !== userId && req.user?.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+  const userId = req.params.id;
+
+  if (req.user?.id !== userId && req.user?.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    await prisma.user.delete({ where: { id: userId } });
+    res.json({ message: 'User deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getAllUsers = async (_req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.json(users);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
