@@ -3,8 +3,16 @@ import { Request, Response } from 'express';
 import { hashPassword,generateToken } from "../utils/auth";
 const prisma = new PrismaClient();
 
+const isValidEmail=(email:string)=> /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidPassword=(password:string)=> typeof password === "string" && password.length >= 6;
+const isValidName=(name:string)=> typeof name === "string" && name.trim().length > 0;
+
 export const createAdmin=async(req:Request,res:Response)=>{
     const {name,email,password}=req.body
+    if(!isValidName(name)) return res.status(400).json({message:"Name is required"})
+    if (!isValidEmail(email)) return res.status(400).json({ message: "Valid email is required" });
+    if (!isValidPassword(password)) return res.status(400).json({ message: "Password must be at least 6 characters" });
+
     try{
         const existing=await prisma.admin.findUnique({where:{email}})
         if(existing) return res.status(400).json({message:'Email already exists'})
@@ -28,6 +36,8 @@ export const updateAdmin=async(req:Request,res:Response)=>{
     if (req.user?.id !== adminId && req.user?.role !== 'superadmin') {
         return res.status(403).json({ message: 'Cannot update other admins' });
     }
+    if (name !== undefined && !isValidName(name)) return res.status(400).json({ message: "Name is invalid" });
+    if (password !== undefined && !isValidPassword(password)) return res.status(400).json({ message: "Password must be at least 6 characters" });
     try{
         const updated=await prisma.admin.update({
             where:{id:adminId},

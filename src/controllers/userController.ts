@@ -3,9 +3,15 @@ import { hashPassword, generateToken } from '../utils/auth';
 import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
+const isValidEmail=(email:string)=> /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidPassword=(password:string)=> typeof password === "string" && password.length >= 6;
+const isValidName=(name:string)=> typeof name === "string" && name.trim().length > 0;
 
 export const createUser=async(req:Request,res:Response)=>{
-    const {name,email,password}:{ name: string; email: string; password: string }=req.body
+    const {name,email,password}=req.body
+    if (!isValidName(name)) return res.status(400).json({ message: "Name is required" });
+    if (!isValidEmail(email)) return res.status(400).json({ message: "Valid email is required" });
+    if (!isValidPassword(password)) return res.status(400).json({ message: "Password must be at least 6 characters" });
     try{
         const existing=await prisma.user.findUnique({where:{email}})
         if(existing) return res.status(400).json({message:'Email already exists'})
@@ -28,6 +34,9 @@ export const updateUser=async(req:Request,res:Response)=>{
     if (req.user?.id !== userId && req.user?.role !== 'admin') {
         return res.status(403).json({ message: 'You can only update your own profile' });
     }
+    if (name !== undefined && !isValidName(name)) return res.status(400).json({ message: "Name is invalid" });
+    if (password !== undefined && !isValidPassword(password)) return res.status(400).json({ message: "Password must be at least 6 characters" });
+    
     try {
         const updated = await prisma.user.update({
         where: { id: userId },
@@ -75,7 +84,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllUsers = async (_req: Request, res: Response) => {
+export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany();
     res.json(users);
