@@ -87,3 +87,27 @@ export const getAllSellers = async (_req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+export const approveSeller=async(req:Request,res:Response)=>{
+  const sellerId=req.params.id
+  if(req.user?.role!=='admin' && req.user?.role!=='superadmin'){
+    return res.status(403).json({ message: 'Only admins can approve sellers' });
+  }
+  try{
+    const seller=await prisma.seller.findUnique({where:{id:sellerId}})
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+    const updatedSeller=await prisma.seller.update({
+      where:{id:sellerId},
+      data:{
+        status:'APPROVED'
+      }
+    })
+    res.json({ message: 'Seller approved', seller: updatedSeller });
+  }
+  catch(err:any){
+    res.status(500).json({error:err.message})
+  }
+}

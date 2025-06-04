@@ -15,8 +15,8 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   addresses    Address[]
-  wishlist     Product[] @relation("Wishlist")
-  cart         Product[] @relation("Cart")
+  wishlist     UserWishlist[]
+  cart         UserCart[]
   orderHistory Order[]   @relation("OrderHistory")
 }
 
@@ -42,11 +42,18 @@ model Address {
   user   User        @relation(fields: [userId], references: [id])
 }
 
+enum SellerStatus{
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Seller {
   id        String    @id @default(uuid())
   name      String
   email     String    @unique
   password  String
+  status     SellerStatus  @default(PENDING) 
   products  Product[]
   orders    Order[]   @relation("SellerOrders")
   createdAt DateTime  @default(now())
@@ -69,8 +76,8 @@ model Product {
   stock        Int
   sellerId     String
   seller       Seller      @relation(fields: [sellerId], references: [id])
-  wishlistedBy User[]      @relation("Wishlist")
-  inCarts      User[]      @relation("Cart")
+  wishlistedBy UserWishlist[]
+  inCarts      UserCart[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   orderItems   OrderItem[]
@@ -116,4 +123,27 @@ model OrderItem {
   price     Float
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
+}
+
+model UserWishlist {
+  userId    String
+  productId String
+
+  createdAt DateTime  @default(now())
+  user      User    @relation(fields: [userId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@id([userId, productId])
+}
+
+model UserCart {
+  userId    String
+  productId String
+
+  createdAt DateTime @default(now())
+  quantity  Int
+  user      User    @relation(fields: [userId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@id([userId, productId])
 }
