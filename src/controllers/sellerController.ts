@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { hashPassword, generateToken } from '../utils/auth';
+import { hashPassword, generateToken,comparePassword } from '../utils/auth';
 import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
@@ -55,6 +55,35 @@ export const updateSeller = async (req:Request, res:Response) => {
   }
 };
 
+export const loginSeller = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
+  try {
+    const seller = await prisma.seller.findUnique({ where: { email } });
+    if (!seller) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await comparePassword(password, seller.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = generateToken(seller.id, 'seller');
+    res.json({ seller, token });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 export const getSellerById = async (req: Request, res: Response) => {
   const sellerId = req.params.id;
 
@@ -91,7 +120,7 @@ export const deleteSeller = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllSellers = async (_req: Request, res: Response) => {
+export const getAllSellers = async (req: Request, res: Response) => {
   try {
     const sellers = await prisma.seller.findMany();
     res.json(sellers);

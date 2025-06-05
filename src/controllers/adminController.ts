@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from 'express';
-import { hashPassword,generateToken } from "../utils/auth";
+import { hashPassword,generateToken,comparePassword } from "../utils/auth";
 const prisma = new PrismaClient();
 
 const isValidEmail=(email:string)=> /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -29,6 +29,34 @@ export const createAdmin=async(req:Request,res:Response)=>{
     ]}
 }
 
+export const loginAdmin = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
+  try {
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (!admin) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await comparePassword(password, admin.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = generateToken(admin.id, 'admin');
+    res.json({ admin, token });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 export const updateAdmin=async(req:Request,res:Response)=>{
     const adminId=req.params.id
@@ -53,24 +81,24 @@ export const updateAdmin=async(req:Request,res:Response)=>{
     }
 }
 
-// export const superadmin=async(req:Request,res:Response)=>{
-//     const { name, email, password } = req.body;
-//   const existing = await prisma.admin.findUnique({ where: { email } });
-//   if (existing) return res.status(400).json({ message: 'Email already exists' });
+export const superadmin=async(req:Request,res:Response)=>{
+  const { name, email, password } = req.body;
+  const existing = await prisma.admin.findUnique({ where: { email } });
+  if (existing) return res.status(400).json({ message: 'Email already exists' });
 
-//   const hashed = await hashPassword(password);
-//   const admin = await prisma.admin.create({
-//     data: { name, email, password: hashed },
-//   });
-//   const token = generateToken(admin.id, 'superadmin');
-//   res.status(201).json({ admin, token });
-// }
-
-
+  const hashed = await hashPassword(password);
+  const admin = await prisma.admin.create({
+    data: { name, email, password: hashed },
+  });
+  const token = generateToken(admin.id, 'superadmin');
+  res.status(201).json({ admin, token });
+}
 
 
 
-export const getAllAdmins = async (_req: Request, res: Response) => {
+
+
+export const getAllAdmins = async (req: Request, res: Response) => {
   try {
     const admins = await prisma.admin.findMany();
     res.json(admins);

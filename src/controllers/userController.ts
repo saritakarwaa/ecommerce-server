@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { hashPassword, generateToken } from '../utils/auth';
+import { hashPassword, generateToken,comparePassword } from '../utils/auth';
 import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
@@ -27,6 +27,35 @@ export const createUser=async(req:Request,res:Response)=>{
     }
 }
 
+export const loginUser = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = generateToken(user.id, 'user'); 
+
+    res.json({ user, token });
+  } catch (err: any) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 export const updateUser=async(req:Request,res:Response)=>{
     const userId=req.params.id 
