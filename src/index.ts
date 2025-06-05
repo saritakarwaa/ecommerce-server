@@ -4,7 +4,7 @@ import userRoutes from "./routes/userRoutes";
 import sellerRoutes from "./routes/sellerRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import productRoutes from "./routes/productRoutes"
-
+import orderRoutes from "./routes/orderRoutes"
 const app = express();
 const port = 3000;
 
@@ -16,6 +16,7 @@ app.use("/users", userRoutes);
 app.use("/sellers", sellerRoutes);
 app.use("/admins", adminRoutes);
 app.use('/products',productRoutes)
+app.use('/orders',orderRoutes)
 
 
 app.get('/', (req, res) => {

@@ -8,6 +8,21 @@ export const createProduct=async(req:Request,res:Response)=>{
         return res.status(403).json({ message: 'Only sellers can add products' });
     }
     const {name,description,price,stock}=req.body
+     if (!name || typeof name !== 'string' || name.trim().length < 3) {
+      return res.status(400).json({ message: 'Name is required and should be at least 3 characters' });
+    }
+
+    if (!description || typeof description !== 'string' || description.trim().length < 10) {
+      return res.status(400).json({ message: 'Description is required and should be at least 10 characters' });
+    }
+
+    if (price == null || typeof price !== 'number' || price <= 0) {
+      return res.status(400).json({ message: 'Price must be a positive number' });
+    }
+
+    if (stock == null || typeof stock !== 'number' || stock < 0 || !Number.isInteger(stock)) {
+      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    }
     try{
         const product=await prisma.product.create({
             data:{
@@ -42,7 +57,22 @@ export const updateProduct=async(req:Request,res:Response)=>{
     if (req.user?.role !== 'seller') {
         return res.status(403).json({ message: 'Only sellers can update products' });
     }
+    const { name, description, price, stock } = req.body;
+    if (name && (typeof name !== 'string' || name.trim().length < 3)) {
+      return res.status(400).json({ message: 'Name must be at least 3 characters' });
+    }
 
+    if (description && (typeof description !== 'string' || description.trim().length < 10)) {
+      return res.status(400).json({ message: 'Description must be at least 10 characters' });
+    }
+
+    if (price != null && (typeof price !== 'number' || price <= 0)) {
+      return res.status(400).json({ message: 'Price must be a positive number' });
+    }
+
+    if (stock != null && (typeof stock !== 'number' || stock < 0 || !Number.isInteger(stock))) {
+      return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+    }
     try{
         const product=await prisma.product.findUnique({where:{id:productId}})
         if (!product || product.sellerId !== sellerId) {
