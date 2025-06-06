@@ -133,6 +133,7 @@ export const getAllSellers = async (req: Request, res: Response) => {
 export const approveSeller=async(req:Request,res:Response)=>{
   const sellerId=req.params.id
   if(req.user?.role!=='admin' && req.user?.role!=='superadmin'){
+    //array.includes(req.user.role)
     return res.status(403).json({ message: 'Only admins can approve sellers' });
   }
   try{
