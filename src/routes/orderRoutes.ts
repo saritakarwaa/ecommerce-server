@@ -5,7 +5,8 @@ import {
   getOrderById,
   updateOrderStatus,
   getSellerOrders,
-  getAllOrders
+  getAllOrders,
+  getOrderCountStatus
 } from '../controllers/orderController';
 import { authenticate } from '../middlewares/auth';
 
@@ -21,4 +22,5 @@ router.get('/:id', authenticate(['user', 'seller']), getOrderById as express.Req
 
 router.get('/', authenticate(['admin','superadmin']), getAllOrders);
 
+router.get("/status-counts",authenticate(["admin"]),getOrderCountStatus)
 export default router;

@@ -114,3 +114,25 @@ export const getAllOrders = async (_req: Request, res: Response) => {
     res.status(500).json({ message: 'Admin fetch failed', error: err });
   }
 };
+
+export const getOrderCountStatus=async (req:Request,res:Response)=>{
+  try{
+    const counts=await prisma.order.groupBy({
+      by:['status'],_count:{status:true}})
+    const result:Record<OrderStatus,number>={
+      PENDING: 0,
+      PROCESSING: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    }
+    counts.forEach(({status,_count})=>{
+      result[status]=_count.status
+    })
+    res.status(200).json({ statusCounts: result });
+  }
+  catch(err){
+    console.error('Error fetching order status counts:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
