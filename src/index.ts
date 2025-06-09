@@ -6,6 +6,7 @@ import adminRoutes from "./routes/adminRoutes";
 import productRoutes from "./routes/productRoutes"
 import orderRoutes from "./routes/orderRoutes"
 import cartRoutes from "./routes/cartRoutes"
+import transactionRoutes from "./routes/transactionRoutes"
 const app = express();
 const port = 3000;
 
@@ -19,6 +20,7 @@ app.use("/admins", adminRoutes);
 app.use('/products',productRoutes)
 app.use('/orders',orderRoutes)
 app.use('/cart',cartRoutes)
+app.use("/transactions",transactionRoutes)
 
 
 app.get('/', (req, res) => {
