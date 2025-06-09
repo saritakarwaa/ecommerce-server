@@ -69,12 +69,19 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
+enum ProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Product {
   id           String      @id @default(uuid())
   name         String
   price        Float
   stock        Int
   description  String
+  status       ProductStatus @default(PENDING)
   sellerId     String
   seller       Seller      @relation(fields: [sellerId], references: [id])
   wishlistedBy UserWishlist[]

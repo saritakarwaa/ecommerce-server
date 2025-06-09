@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient,ProductStatus } from '@prisma/client';
 import { Request, Response } from 'express';
 const prisma = new PrismaClient();
 
@@ -48,7 +48,7 @@ export const getProductById = async (req: Request, res: Response) => {
   }
 };
 
-//getAllProducts- public access with optional filters
+
 
 export const updateProduct=async(req:Request,res:Response)=>{
     const sellerId=req.user?.id
@@ -138,3 +138,43 @@ export const adminDeleteProduct = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+export const approveProduct=async(req:Request,res:Response)=>{
+  const {productId}=req.params
+  try{
+    const product=await prisma.product.update({
+      where:{id:productId},
+      data:{status:ProductStatus.APPROVED}
+    })
+    res.status(200).json({ message: "Product approved", product });
+  }
+  catch(err){
+    res.status(500).json({ message: "Failed to approve product", error: err });
+  }
+}
+
+export const topSellingProducts=async(req:Request,res:Response)=>{
+  try{
+    const topProducts=await prisma.orderItem.groupBy({
+      by:['productId'],
+      _sum:{ quantity:true},
+      orderBy:{_sum:{quantity:'desc'}},
+      take:10, //how many products to return
+    })
+    const productIds = topProducts.map(p => p.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds },},
+      include: {seller: true,},
+    });
+    const result=products.map(product=>{
+      const match=topProducts.find(p=>p.productId===product.id)
+      return {...product,totalSold:match?._sum.quantity || 0}
+    })
+    res.json(result)
+  }
+  catch(err){
+    console.error("Error fetching top-selling products", err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
