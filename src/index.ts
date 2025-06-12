@@ -10,6 +10,7 @@ import transactionRoutes from "./routes/transactionRoutes"
 const app = express();
 const port = 3000;
 
+const allowedOrigins = ["http://localhost:5173", ];
 
 app.use(cors({
   origin: function (origin, callback) {
