@@ -26,13 +26,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/users", userRoutes);
-app.use("/sellers", sellerRoutes);
-app.use("/admins", adminRoutes);
-app.use('/products',productRoutes)
-app.use('/orders',orderRoutes)
-app.use('/cart',cartRoutes)
-app.use("/transactions",transactionRoutes)
+app.use("/api/users", userRoutes);
+app.use("/api/sellers", sellerRoutes);
+app.use("/api/admins", adminRoutes);
+app.use('/api/products',productRoutes)
+app.use('/api/orders',orderRoutes)
+app.use('/api/cart',cartRoutes)
+app.use("/api/transactions",transactionRoutes)
 
 
 app.get('/', (req, res) => {
