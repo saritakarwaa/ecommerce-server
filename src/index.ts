@@ -7,6 +7,7 @@ import productRoutes from "./routes/productRoutes"
 import orderRoutes from "./routes/orderRoutes"
 import cartRoutes from "./routes/cartRoutes"
 import transactionRoutes from "./routes/transactionRoutes"
+import statsRoutes from "./routes/statsRoutes"
 const app = express();
 const port = 3000;
 
@@ -33,6 +34,7 @@ app.use('/api/products',productRoutes)
 app.use('/api/orders',orderRoutes)
 app.use('/api/cart',cartRoutes)
 app.use("/api/transactions",transactionRoutes)
+app.use("/api/stats",statsRoutes)
 
 
 app.get('/', (req, res) => {

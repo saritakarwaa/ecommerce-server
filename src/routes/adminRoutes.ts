@@ -6,7 +6,7 @@ import { authenticate } from "../middlewares/auth";
 const router = Router();
 
 // Only admins can create other admins (role hierarchy)
-router.post("/", authenticate(['superadmin']),createAdmin as express.RequestHandler);
+router.post("/",createAdmin as express.RequestHandler);
 router.post('/login',loginAdmin as express.RequestHandler)
 //Admins update their own profile
 router.put("/:id", authenticate(['admin', 'superadmin']),updateAdmin as express.RequestHandler);
