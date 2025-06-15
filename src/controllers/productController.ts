@@ -37,12 +37,14 @@ export const createProduct=async(req:Request,res:Response)=>{
 }
 
 export const getProductById = async (req: Request, res: Response) => {
+
   const productId = req.params.id;
 
   try {
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
+    console.log(product)
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -162,11 +164,19 @@ export const topSellingProducts=async(req:Request,res:Response)=>{
       orderBy:{_sum:{quantity:'desc'}},
       take:10, //how many products to return
     })
+    console.log("Top products:", topProducts);
+    if (!topProducts.length) {
+      res.status(404).json({ message: "No order items found." });
+    }
     const productIds = topProducts.map(p => p.productId);
+    console.log("Top product IDs:", productIds);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds },},
       include: {seller: true,},
     });
+    if (!products.length) {
+      return res.status(404).json({ message: "Products not found for top-selling items." });
+    }
     const result=products.map(product=>{
       const match=topProducts.find(p=>p.productId===product.id)
       return {...product,totalSold:match?._sum.quantity || 0}
