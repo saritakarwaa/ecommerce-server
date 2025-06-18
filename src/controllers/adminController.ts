@@ -8,20 +8,29 @@ const isValidPassword=(password:string)=> typeof password === "string" && passwo
 const isValidName=(name:string)=> typeof name === "string" && name.trim().length > 0;
 
 export const createAdmin=async(req:Request,res:Response)=>{
-    const {name,email,password}=req.body
+    const {name,email,password,role}=req.body
     if(!isValidName(name)) return res.status(400).json({message:"Name is required"})
     if (!isValidEmail(email)) return res.status(400).json({ message: "Valid email is required" });
     if (!isValidPassword(password)) return res.status(400).json({ message: "Password must be at least 6 characters" });
 
+    if (role === "SUPERADMIN") {
+      const existingSuperadmin = await prisma.admin.findFirst({
+        where: { role: "SUPERADMIN" },
+      });
+
+      if (existingSuperadmin) {
+        return res.status(400).json({ message: "Only one SuperAdmin is allowed." });
+      }
+    }
     try{
         const existing=await prisma.admin.findUnique({where:{email}})
         if(existing) return res.status(400).json({message:'Email already exists'})
         
         const hashed= await hashPassword(password)
         const admin=await prisma.admin.create({
-            data: { name, email, password: hashed },
+            data: { name, email, password: hashed,role },
         })
-        const token=generateToken(admin.id,'admin')
+        const token=generateToken(admin.id,admin.role)
         res.status(201).json({admin,token})
     }
     catch(err:any){[
@@ -81,26 +90,17 @@ export const updateAdmin=async(req:Request,res:Response)=>{
     }
 }
 
-export const superadmin=async(req:Request,res:Response)=>{
-  const { name, email, password } = req.body;
-  const existing = await prisma.admin.findUnique({ where: { email } });
-  if (existing) return res.status(400).json({ message: 'Email already exists' });
-
-  const hashed = await hashPassword(password);
-  const admin = await prisma.admin.create({
-    data: { name, email, password: hashed },
-  });
-  const token = generateToken(admin.id, 'superadmin');
-  res.status(201).json({ admin, token });
-}
-
-
-
-
 
 export const getAllAdmins = async (req: Request, res: Response) => {
   try {
-    const admins = await prisma.admin.findMany();
+    const admins = await prisma.admin.findMany({
+      where: {
+        role: 'ADMIN',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
     res.json(admins);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
