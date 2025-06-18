@@ -1,12 +1,16 @@
 
 import express, { Router } from 'express';
-import { getProductById,getSellerProducts,createProduct,updateProduct,deleteProduct,adminDeleteProduct, approveProduct, topSellingProducts } from '../controllers/productController';
+import { getProductById,getSellerProducts,createProduct,updateProduct,deleteProduct,adminDeleteProduct, approveProduct, topSellingProducts,getAllProducts } from '../controllers/productController';
 import { authenticate } from "../middlewares/auth";
 const router=express.Router()
 
 router.get('/top-selling',topSellingProducts as express.RequestHandler)
 router.get('/seller/:sellerId', getSellerProducts);
 router.get('/:id', getProductById as express.RequestHandler);
+
+
+router.get('/', getAllProducts); 
+
 
 router.post('/', authenticate(['seller']), createProduct as express.RequestHandler);
 router.put('/:id', authenticate(['seller']), updateProduct as express.RequestHandler);

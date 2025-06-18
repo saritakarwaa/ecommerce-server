@@ -156,6 +156,22 @@ export const approveProduct=async(req:Request,res:Response)=>{
   }
 }
 
+export const getAllProducts = async (req: Request, res: Response) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        seller: {
+          select: { id: true, name: true, email: true }, 
+        },
+      },
+    });
+    res.json(products);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 export const topSellingProducts=async(req:Request,res:Response)=>{
   try{
     const topProducts=await prisma.orderItem.groupBy({
