@@ -4,7 +4,7 @@ import { getAllTransactions, getTransactionById } from "../controllers/transacti
 
 const router=express.Router()
 
-router.get("/",authenticate(["admin"]),getAllTransactions)
+router.get("/",getAllTransactions)
 router.get("/:id",authenticate(["admin"]),getTransactionById as express.RequestHandler)
 
 export default router
